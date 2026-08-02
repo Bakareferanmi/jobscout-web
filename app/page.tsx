@@ -1,65 +1,162 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState, useCallback } from "react";
+
+type Listing = {
+  id: string;
+  kind: string;
+  category: string;
+  title: string;
+  company: string | null;
+  location: string | null;
+  url: string;
+  source: string;
+  score: number;
+  status: string;
+  fetched_at: string;
+};
+
+type StatRow = { category: string; status: string; n: number };
+
+const CATEGORIES = ["frontend", "data-analysis", "digital-marketing", "electrical", "it-support"];
+const STATUSES = ["new", "saved", "applied", "rejected"];
+
+export default function Dashboard() {
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [stats, setStats] = useState<StatRow[]>([]);
+  const [category, setCategory] = useState("");
+  const [status, setStatus] = useState("");
+  const [minScore, setMinScore] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (category) params.set("category", category);
+    if (status) params.set("status", status);
+    if (minScore) params.set("minScore", minScore);
+    params.set("limit", "50");
+
+    const [listingsRes, statsRes] = await Promise.all([
+      fetch(`/api/listings?${params}`).then((r) => r.json()),
+      fetch("/api/stats").then((r) => r.json()),
+    ]);
+    setListings(listingsRes);
+    setStats(statsRes);
+    setLoading(false);
+  }, [category, status, minScore]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function updateStatus(id: string, newStatus: string) {
+    await fetch(`/api/listings/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    load();
+  }
+
+  const totalNew = stats.filter((s) => s.status === "new").reduce((sum, s) => sum + s.n, 0);
+  const totalSaved = stats.filter((s) => s.status === "saved").reduce((sum, s) => sum + s.n, 0);
+  const totalApplied = stats.filter((s) => s.status === "applied").reduce((sum, s) => sum + s.n, 0);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <main className="max-w-3xl mx-auto p-4 space-y-6">
+      <h1 className="text-xl font-semibold">JobScout</h1>
+
+      {/* Stat tiles */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: "New", value: totalNew, color: "text-info" },
+          { label: "Saved", value: totalSaved, color: "text-warning" },
+          { label: "Applied", value: totalApplied, color: "text-success" },
+        ].map((tile) => (
+          <div
+            key={tile.label}
+            className="bg-surface border border-border rounded-md p-3 border-t-2"
+            style={{ borderTopColor: "currentColor" }}
+          >
+            <div className="text-xs text-muted uppercase tracking-wide">{tile.label}</div>
+            <div className={`font-mono text-2xl mt-1 ${tile.color}`}>{tile.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2">
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="bg-elevated border border-border rounded-sm px-3 py-2 text-sm"
+        >
+          <option value="">All categories</option>
+          {CATEGORIES.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="bg-elevated border border-border rounded-sm px-3 py-2 text-sm"
+        >
+          <option value="">All statuses</option>
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        <input
+          type="number"
+          placeholder="Min score"
+          value={minScore}
+          onChange={(e) => setMinScore(e.target.value)}
+          className="bg-elevated border border-border rounded-sm px-3 py-2 text-sm w-28"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+      </div>
+
+      {/* Listings */}
+      {loading ? (
+        <p className="text-muted text-sm">Loading...</p>
+      ) : listings.length === 0 ? (
+        <p className="text-muted text-sm">No listings match these filters.</p>
+      ) : (
+        <div className="space-y-2">
+          {listings.map((l) => (
+            <div key={l.id} className="bg-surface border border-border rounded-md p-3">
+              <div className="flex justify-between items-start gap-2">
+                <div>
+                  <div className="text-sm font-medium">{l.title}</div>
+                  <div className="text-xs text-muted mt-0.5">
+                    {l.company || "—"} · {l.category} · via {l.source}
+                  </div>
+                </div>
+                <span className="font-mono text-xs text-primary shrink-0">{l.score}</span>
+              </div>
+              <div className="flex gap-2 mt-3">
+                <a
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-info underline"
+                >
+                  View
+                </a>
+                <button onClick={() => updateStatus(l.id, "saved")} className="text-xs text-warning ml-auto">
+                  Save
+                </button>
+                <button onClick={() => updateStatus(l.id, "applied")} className="text-xs text-success">
+                  Applied
+                </button>
+                <button onClick={() => updateStatus(l.id, "rejected")} className="text-xs text-error">
+                  Reject
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
