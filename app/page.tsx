@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   Send,
   Radar,
+  ChevronDown,
 } from "lucide-react";
 
 type Listing = {
@@ -108,177 +109,195 @@ export default function Dashboard() {
   });
 
   const selectClass =
-    "bg-elevated border border-border rounded-lg pl-3 pr-8 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary appearance-none font-medium";
+    "bg-elevated border border-border rounded-xl pl-3.5 pr-8 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary appearance-none font-medium cursor-pointer hover:border-primary/40 transition";
 
   return (
-    <main className="max-w-3xl mx-auto px-4 py-8 space-y-7">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="relative w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
-            <Radar size={20} className="text-white" />
-            <span className="absolute inset-0 rounded-xl bg-primary animate-ping opacity-20" />
+    <div className="min-h-screen">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-10 backdrop-blur-xl bg-bg/80 border-b border-border">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="relative w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
+              <Radar size={20} className="text-white" />
+              <span className="absolute inset-0 rounded-xl bg-primary animate-ping opacity-20" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold tracking-tight leading-none">JobScout</h1>
+              <p className="text-[11px] text-muted mt-1 hidden sm:block">Tracked listings across your target roles</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight leading-none">JobScout</h1>
-            <p className="text-xs text-muted mt-1">Tracked listings across your target roles</p>
-          </div>
+          <button
+            onClick={runFetch}
+            disabled={fetching}
+            className="flex items-center gap-2 bg-primary hover:bg-primary-hover active:scale-[0.97] transition-all text-white text-sm font-medium px-4 py-2.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/25"
+          >
+            <RefreshCw size={15} className={fetching ? "animate-spin" : ""} />
+            <span className="hidden sm:inline">{fetching ? "Fetching" : "Fetch new"}</span>
+          </button>
         </div>
-        <button
-          onClick={runFetch}
-          disabled={fetching}
-          className="flex items-center gap-2 bg-primary hover:bg-primary-hover active:scale-[0.97] transition-all text-white text-sm font-medium px-4 py-2.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/25"
-        >
-          <RefreshCw size={15} className={fetching ? "animate-spin" : ""} />
-          {fetching ? "Fetching" : "Fetch new"}
-        </button>
       </div>
 
-      {fetchResult && (
-        <div className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-xl px-3.5 py-2.5 -mt-4 font-medium">
-          {fetchResult}
-        </div>
-      )}
-
-      {/* Stat tiles */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: "New", value: totalNew, Icon: Inbox, filterValue: "new" },
-          { label: "Saved", value: totalSaved, Icon: Bookmark, filterValue: "saved" },
-          { label: "Applied", value: totalApplied, Icon: ClipboardCheck, filterValue: "applied" },
-        ].map((tile) => {
-          const active = status === tile.filterValue;
-          return (
-            <button
-              key={tile.label}
-              onClick={() => setStatus(active ? "" : tile.filterValue)}
-              className={`text-left bg-gradient-to-b from-primary/15 to-primary/5 border rounded-2xl px-4 py-4 transition ${
-                active ? "border-primary ring-2 ring-primary/30" : "border-primary/25 hover:border-primary/50"
-              }`}
-            >
-              <tile.Icon size={16} className="text-primary mb-2" />
-              <div className="font-mono text-2xl font-semibold text-text">{tile.value}</div>
-              <div className="text-[11px] text-muted uppercase tracking-wider font-medium mt-0.5">{tile.label}</div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <Filter size={14} className="text-muted mr-1" />
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className={selectClass}>
-          <option value="">All categories</option>
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectClass}>
-          <option value="">All statuses</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-        <input
-          type="number"
-          placeholder="Min score"
-          value={minScore}
-          onChange={(e) => setMinScore(e.target.value)}
-          className="bg-elevated border border-border rounded-lg px-3 py-2.5 text-sm w-24 font-medium focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-        />
-        <a
-          href={`/api/export?${exportParams}`}
-          className="flex items-center gap-1.5 bg-primary/15 border border-primary/25 hover:bg-primary/25 transition rounded-lg px-3.5 py-2.5 text-sm text-primary ml-auto font-medium"
-        >
-          <Download size={14} />
-          Export
-        </a>
-      </div>
-
-      {/* Listings */}
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-surface border border-border rounded-2xl p-5 h-24 animate-pulse" />
-          ))}
-        </div>
-      ) : listings.length === 0 ? (
-        <div className="text-center py-16 border border-dashed border-border rounded-2xl">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-            <Inbox size={20} className="text-primary" />
+      <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+        {fetchResult && (
+          <div className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-xl px-3.5 py-2.5 font-medium">
+            {fetchResult}
           </div>
-          <p className="text-sm text-muted">No listings match these filters</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {listings.map((l) => {
-            const tier = scoreTier(l.score);
+        )}
+
+        {/* Stat tiles */}
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: "New", value: totalNew, Icon: Inbox, filterValue: "new" },
+            { label: "Saved", value: totalSaved, Icon: Bookmark, filterValue: "saved" },
+            { label: "Applied", value: totalApplied, Icon: ClipboardCheck, filterValue: "applied" },
+          ].map((tile) => {
+            const active = status === tile.filterValue;
             return (
-              <div
-                key={l.id}
-                className="bg-surface border border-border hover:border-primary/40 hover:-translate-y-0.5 transition-all rounded-2xl p-5 shadow-sm"
+              <button
+                key={tile.label}
+                onClick={() => setStatus(active ? "" : tile.filterValue)}
+                className={`text-left bg-gradient-to-b from-primary/15 to-primary/5 border rounded-2xl px-4 py-4 transition-all ${
+                  active
+                    ? "border-primary ring-2 ring-primary/30 shadow-lg shadow-primary/10"
+                    : "border-primary/20 hover:border-primary/45"
+                }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[15px] font-semibold leading-snug">{l.title}</div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted mt-2">
-                      <Building2 size={12} />
-                      <span className="truncate">{l.company || "Unknown"}</span>
-                      <span className="text-border">·</span>
-                      <span>{l.source}</span>
-                    </div>
-                    <span className="inline-block mt-2.5 text-[11px] font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-full capitalize">
-                      {l.category.replace("-", " ")}
-                    </span>
-                  </div>
-                  <div
-                    className={`shrink-0 flex flex-col items-center justify-center w-12 h-12 rounded-full ${
-                      tier.solid ? "bg-primary text-white" : "bg-primary/10 text-primary"
-                    }`}
-                  >
-                    <span className="font-mono text-sm font-bold leading-none">{l.score}</span>
-                  </div>
+                <tile.Icon size={16} className="text-primary mb-2.5" />
+                <div className="font-mono text-2xl font-semibold text-text leading-none">{tile.value}</div>
+                <div className="text-[10.5px] text-muted uppercase tracking-widest font-medium mt-1.5">
+                  {tile.label}
                 </div>
-
-                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
-                  <a
-                    href={l.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-primary font-medium hover:underline"
-                  >
-                    <ExternalLink size={12} />
-                    View
-                  </a>
-                  <div className="flex items-center gap-1.5 ml-auto">
-                    <button
-                      onClick={() => updateStatus(l.id, "saved")}
-                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition font-medium"
-                    >
-                      <Bookmark size={12} />
-                      Save
-                    </button>
-                    <button
-                      onClick={() => updateStatus(l.id, "applied")}
-                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover transition font-medium"
-                    >
-                      <Send size={12} />
-                      Applied
-                    </button>
-                    <button
-                      onClick={() => updateStatus(l.id, "rejected")}
-                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg border border-border text-muted hover:bg-error/10 hover:text-error hover:border-error/30 transition"
-                    >
-                      <XCircle size={12} />
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              </div>
+              </button>
             );
           })}
         </div>
-      )}
-    </main>
+
+        {/* Filters */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Filter size={14} className="text-muted mr-0.5 shrink-0" />
+
+          <div className="relative">
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className={selectClass}>
+              <option value="">All categories</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c.replace("-", " ")}</option>
+              ))}
+            </select>
+            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+          </div>
+
+          <div className="relative">
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectClass}>
+              <option value="">All statuses</option>
+              {STATUSES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+          </div>
+
+          <input
+            type="number"
+            placeholder="Min score"
+            value={minScore}
+            onChange={(e) => setMinScore(e.target.value)}
+            className="bg-elevated border border-border rounded-xl px-3.5 py-2.5 text-sm w-24 font-medium focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-primary/40 transition"
+          />
+
+          <a
+            href={`/api/export?${exportParams}`}
+            className="flex items-center gap-1.5 bg-primary/15 border border-primary/25 hover:bg-primary/25 transition rounded-xl px-3.5 py-2.5 text-sm text-primary ml-auto font-medium"
+          >
+            <Download size={14} />
+            Export
+          </a>
+        </div>
+
+        {/* Listings */}
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-surface border border-border rounded-2xl p-5 h-28 animate-pulse" />
+            ))}
+          </div>
+        ) : listings.length === 0 ? (
+          <div className="text-center py-16 border border-dashed border-border rounded-2xl">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+              <Inbox size={20} className="text-primary" />
+            </div>
+            <p className="text-sm text-muted">No listings match these filters</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {listings.map((l) => {
+              const tier = scoreTier(l.score);
+              return (
+                <div
+                  key={l.id}
+                  className="bg-surface border border-border hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20 transition-all rounded-2xl p-5"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[15px] font-semibold leading-snug tracking-tight">{l.title}</div>
+                      <div className="flex items-center gap-1.5 text-xs text-muted mt-2">
+                        <Building2 size={12} className="shrink-0" />
+                        <span className="truncate">{l.company || "Unknown"}</span>
+                        <span className="text-border">·</span>
+                        <span className="shrink-0">{l.source}</span>
+                      </div>
+                      <span className="inline-block mt-2.5 text-[11px] font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-full capitalize">
+                        {l.category.replace("-", " ")}
+                      </span>
+                    </div>
+                    <div
+                      className={`shrink-0 flex flex-col items-center justify-center w-12 h-12 rounded-full ${
+                        tier.solid ? "bg-primary text-white" : "bg-primary/10 text-primary"
+                      }`}
+                    >
+                      <span className="font-mono text-sm font-bold leading-none">{l.score}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
+                    <a
+                      href={l.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-xs text-primary font-medium hover:underline"
+                    >
+                      <ExternalLink size={12} />
+                      View
+                    </a>
+                    <div className="flex items-center gap-1.5 ml-auto">
+                      <button
+                        onClick={() => updateStatus(l.id, "saved")}
+                        className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 active:scale-95 transition font-medium"
+                      >
+                        <Bookmark size={12} />
+                        Save
+                      </button>
+                      <button
+                        onClick={() => updateStatus(l.id, "applied")}
+                        className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover active:scale-95 transition font-medium"
+                      >
+                        <Send size={12} />
+                        Applied
+                      </button>
+                      <button
+                        onClick={() => updateStatus(l.id, "rejected")}
+                        className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg border border-border text-muted hover:bg-error/10 hover:text-error hover:border-error/30 active:scale-95 transition"
+                      >
+                        <XCircle size={12} />
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
