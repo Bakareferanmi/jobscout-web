@@ -45,6 +45,10 @@ async function saveListings(raw: RawListing[], category: string): Promise<number
   return newCount;
 }
 
+export async function GET(request: NextRequest) {
+  return POST(request);
+}
+
 export async function POST(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const requestedCategory = searchParams.get("category");
