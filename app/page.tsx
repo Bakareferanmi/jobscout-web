@@ -82,6 +82,12 @@ export default function Dashboard() {
   const totalSaved = stats.filter((s) => s.status === "saved").reduce((sum, s) => sum + s.n, 0);
   const totalApplied = stats.filter((s) => s.status === "applied").reduce((sum, s) => sum + s.n, 0);
 
+  const exportParams = new URLSearchParams({
+    ...(category ? { category } : {}),
+    ...(status ? { status } : {}),
+    ...(minScore ? { minScore } : {}),
+  });
+
   return (
     <main className="max-w-3xl mx-auto p-4 space-y-6">
       <div className="flex justify-between items-center">
@@ -144,6 +150,12 @@ export default function Dashboard() {
           onChange={(e) => setMinScore(e.target.value)}
           className="bg-elevated border border-border rounded-sm px-3 py-2 text-sm w-28"
         />
+        <a
+          href={`/api/export?${exportParams}`}
+          className="bg-elevated border border-border rounded-sm px-3 py-2 text-sm text-muted hover:text-text"
+        >
+          Export CSV
+        </a>
       </div>
 
       {/* Listings */}
