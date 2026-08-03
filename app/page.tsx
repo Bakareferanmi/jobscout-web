@@ -9,13 +9,11 @@ import {
   XCircle,
   Building2,
   Filter,
-  Inbox,
-  ClipboardCheck,
-  Send,
   Radar,
   ChevronDown,
   Sun,
   Moon,
+  Send,
 } from "lucide-react";
 
 type Listing = {
@@ -37,10 +35,30 @@ type StatRow = { category: string; status: string; n: number };
 const CATEGORIES = ["frontend", "data-analysis", "digital-marketing", "electrical", "it-support"];
 const STATUSES = ["new", "saved", "applied", "rejected"];
 
-function scoreTier(score: number) {
-  if (score >= 12) return { label: "Strong", solid: true };
-  if (score >= 8) return { label: "Good", solid: false };
-  return { label: "Fair", solid: false };
+function signalBars(score: number) {
+  // Maps score to 1-4 filled bars, like a signal strength readout
+  if (score >= 14) return 4;
+  if (score >= 10) return 3;
+  if (score >= 6) return 2;
+  return 1;
+}
+
+function SignalMeter({ score }: { score: number }) {
+  const filled = signalBars(score);
+  return (
+    <div className="flex flex-col items-end gap-1.5">
+      <div className="flex items-end gap-0.5 h-4">
+        {[1, 2, 3, 4].map((bar) => (
+          <div
+            key={bar}
+            className={`w-1 rounded-full transition-colors ${bar <= filled ? "bg-primary" : "bg-border"}`}
+            style={{ height: `${bar * 25}%` }}
+          />
+        ))}
+      </div>
+      <span className="font-mono text-xs font-bold text-primary leading-none">{score}</span>
+    </div>
+  );
 }
 
 export default function Dashboard() {
@@ -125,19 +143,33 @@ export default function Dashboard() {
   const selectClass =
     "bg-elevated border border-border rounded-xl pl-3.5 pr-8 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary appearance-none font-medium cursor-pointer hover:border-primary/40 transition";
 
+  const statTiles = [
+    { label: "New", value: totalNew, filterValue: "new" },
+    { label: "Saved", value: totalSaved, filterValue: "saved" },
+    { label: "Applied", value: totalApplied, filterValue: "applied" },
+  ];
+
   return (
     <div className="min-h-screen">
       {/* Sticky header */}
       <div className="sticky top-0 z-10 backdrop-blur-xl bg-bg/80 border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
-              <Radar size={20} className="text-white" />
-              <span className="absolute inset-0 rounded-xl bg-primary animate-ping opacity-20" />
+            <div className="relative w-10 h-10 rounded-xl bg-elevated border border-border flex items-center justify-center shrink-0 overflow-hidden">
+              <div
+                className="radar-sweep absolute inset-0"
+                style={{
+                  background: "conic-gradient(from 0deg, transparent 0deg, transparent 300deg, var(--color-primary) 360deg)",
+                  opacity: 0.5,
+                }}
+              />
+              <Radar size={18} className="text-primary relative z-10" />
             </div>
             <div>
               <h1 className="text-lg font-semibold tracking-tight leading-none">JobScout</h1>
-              <p className="text-[11px] text-muted mt-1 hidden sm:block">Tracked listings across your target roles</p>
+              <p className="text-[10px] text-muted mt-1 hidden sm:block font-mono uppercase tracking-wider">
+                Scanning {CATEGORIES.length} channels
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -154,7 +186,7 @@ export default function Dashboard() {
               className="flex items-center gap-2 bg-primary hover:bg-primary-hover active:scale-[0.97] transition-all text-white text-sm font-medium px-4 py-2.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/25"
             >
               <RefreshCw size={15} className={fetching ? "animate-spin" : ""} />
-              <span className="hidden sm:inline">{fetching ? "Fetching" : "Fetch new"}</span>
+              <span className="hidden sm:inline">{fetching ? "Scanning" : "Scan now"}</span>
             </button>
           </div>
         </div>
@@ -162,32 +194,28 @@ export default function Dashboard() {
 
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
         {fetchResult && (
-          <div className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-xl px-3.5 py-2.5 font-medium">
+          <div className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-xl px-3.5 py-2.5 font-mono">
             {fetchResult}
           </div>
         )}
 
-        {/* Stat tiles */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: "New", value: totalNew, Icon: Inbox, filterValue: "new" },
-            { label: "Saved", value: totalSaved, Icon: Bookmark, filterValue: "saved" },
-            { label: "Applied", value: totalApplied, Icon: ClipboardCheck, filterValue: "applied" },
-          ].map((tile) => {
+        {/* Console-style stat strip */}
+        <div className="flex bg-surface border border-border rounded-2xl overflow-hidden">
+          {statTiles.map((tile, i) => {
             const active = status === tile.filterValue;
             return (
               <button
                 key={tile.label}
                 onClick={() => setStatus(active ? "" : tile.filterValue)}
-                className={`text-left bg-gradient-to-b from-primary/15 to-primary/5 border rounded-2xl px-4 py-4 transition-all ${
-                  active
-                    ? "border-primary ring-2 ring-primary/30 shadow-lg shadow-primary/10"
-                    : "border-primary/20 hover:border-primary/45"
-                }`}
+                className={`flex-1 text-left px-4 py-4 transition-colors relative ${
+                  active ? "bg-primary/10" : "hover:bg-elevated"
+                } ${i > 0 ? "border-l border-border" : ""}`}
               >
-                <tile.Icon size={16} className="text-primary mb-2.5" />
-                <div className="font-mono text-2xl font-semibold text-text leading-none">{tile.value}</div>
-                <div className="text-[10.5px] text-muted uppercase tracking-widest font-medium mt-1.5">
+                {active && <span className="absolute top-0 left-0 right-0 h-0.5 bg-primary" />}
+                <div className="font-mono text-2xl font-semibold leading-none text-text">
+                  {String(tile.value).padStart(2, "0")}
+                </div>
+                <div className="text-[10px] text-muted uppercase tracking-widest font-medium mt-2">
                   {tile.label}
                 </div>
               </button>
@@ -224,7 +252,7 @@ export default function Dashboard() {
             placeholder="Min score"
             value={minScore}
             onChange={(e) => setMinScore(e.target.value)}
-            className="bg-elevated border border-border rounded-xl px-3.5 py-2.5 text-sm w-24 font-medium focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-primary/40 transition"
+            className="bg-elevated border border-border rounded-xl px-3.5 py-2.5 text-sm w-24 font-mono focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary hover:border-primary/40 transition"
           />
 
           <a
@@ -245,79 +273,68 @@ export default function Dashboard() {
           </div>
         ) : listings.length === 0 ? (
           <div className="text-center py-16 border border-dashed border-border rounded-2xl">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-              <Inbox size={20} className="text-primary" />
-            </div>
-            <p className="text-sm text-muted">No listings match these filters</p>
+            <Radar size={24} className="text-primary mx-auto mb-3 opacity-50" />
+            <p className="text-sm text-muted font-mono">No signal — nothing matches these filters</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {listings.map((l) => {
-              const tier = scoreTier(l.score);
-              return (
-                <div
-                  key={l.id}
-                  className="bg-surface border border-border hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20 transition-all rounded-2xl p-5"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[15px] font-semibold leading-snug tracking-tight">{l.title}</div>
-                      <div className="flex items-center gap-1.5 text-xs text-muted mt-2">
-                        <Building2 size={12} className="shrink-0" />
-                        <span className="truncate">{l.company || "Unknown"}</span>
-                        <span className="text-border">·</span>
-                        <span className="shrink-0">{l.source}</span>
-                      </div>
-                      <span className="inline-block mt-2.5 text-[11px] font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-full capitalize">
-                        {l.category.replace("-", " ")}
-                      </span>
+            {listings.map((l) => (
+              <div
+                key={l.id}
+                className="bg-surface border border-border border-l-4 border-l-primary/60 hover:border-l-primary hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20 transition-all rounded-2xl p-5"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[15px] font-semibold leading-snug tracking-tight">{l.title}</div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted mt-2">
+                      <Building2 size={12} className="shrink-0" />
+                      <span className="truncate">{l.company || "Unknown"}</span>
+                      <span className="text-border">·</span>
+                      <span className="shrink-0">{l.source}</span>
                     </div>
-                    <div
-                      className={`shrink-0 flex flex-col items-center justify-center w-12 h-12 rounded-full ${
-                        tier.solid ? "bg-primary text-white" : "bg-primary/10 text-primary"
-                      }`}
-                    >
-                      <span className="font-mono text-sm font-bold leading-none">{l.score}</span>
-                    </div>
+                    <span className="inline-block mt-2.5 text-[11px] font-mono text-primary/80">
+                      #{l.category.replace(/-/g, "_")}
+                    </span>
                   </div>
+                  <SignalMeter score={l.score} />
+                </div>
 
-                  <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
-                    <a
-                      href={l.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-primary font-medium hover:underline"
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-dashed border-border">
+                  <a
+                    href={l.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-xs text-primary font-medium hover:underline"
+                  >
+                    <ExternalLink size={12} />
+                    View
+                  </a>
+                  <div className="flex items-center gap-1.5 ml-auto">
+                    <button
+                      onClick={() => updateStatus(l.id, "saved")}
+                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 active:scale-95 transition font-medium"
                     >
-                      <ExternalLink size={12} />
-                      View
-                    </a>
-                    <div className="flex items-center gap-1.5 ml-auto">
-                      <button
-                        onClick={() => updateStatus(l.id, "saved")}
-                        className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 active:scale-95 transition font-medium"
-                      >
-                        <Bookmark size={12} />
-                        Save
-                      </button>
-                      <button
-                        onClick={() => updateStatus(l.id, "applied")}
-                        className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover active:scale-95 transition font-medium"
-                      >
-                        <Send size={12} />
-                        Applied
-                      </button>
-                      <button
-                        onClick={() => updateStatus(l.id, "rejected")}
-                        className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg border border-border text-muted hover:bg-error/10 hover:text-error hover:border-error/30 active:scale-95 transition"
-                      >
-                        <XCircle size={12} />
-                        Reject
-                      </button>
-                    </div>
+                      <Bookmark size={12} />
+                      Save
+                    </button>
+                    <button
+                      onClick={() => updateStatus(l.id, "applied")}
+                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover active:scale-95 transition font-medium"
+                    >
+                      <Send size={12} />
+                      Applied
+                    </button>
+                    <button
+                      onClick={() => updateStatus(l.id, "rejected")}
+                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg border border-border text-muted hover:bg-error/10 hover:text-error hover:border-error/30 active:scale-95 transition"
+                    >
+                      <XCircle size={12} />
+                      Reject
+                    </button>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
       </main>
