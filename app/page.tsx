@@ -190,7 +190,7 @@ export default function Dashboard() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-primary/[0.04] border border-primary/20 rounded-md p-4 h-20 animate-pulse" />
+            <div key={i} className="bg-primary/10 border border-primary/40 rounded-md p-4 h-20 animate-pulse" />
           ))}
         </div>
       ) : listings.length === 0 ? (
@@ -205,7 +205,7 @@ export default function Dashboard() {
             return (
               <div
                 key={l.id}
-                className="bg-primary/[0.04] border border-primary/20 hover:border-primary/50 hover:bg-primary/[0.07] transition rounded-md p-4"
+                className="bg-primary/10 border border-primary/40 hover:border-primary/70 hover:bg-primary/[0.14] transition rounded-md p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -227,7 +227,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 mt-3.5 pt-3 border-t border-primary/15">
+                <div className="flex items-center gap-2 mt-3.5 pt-3 border-t border-primary/20">
                   <a
                     href={l.url}
                     target="_blank"
