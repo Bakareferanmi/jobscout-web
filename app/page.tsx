@@ -9,7 +9,7 @@ import {
   XCircle,
   Building2,
   Filter,
-  Sparkles,
+  Inbox,
   ClipboardCheck,
   Send,
   Radar,
@@ -143,19 +143,25 @@ export default function Dashboard() {
       {/* Stat tiles */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "New", value: totalNew, Icon: Sparkles },
-          { label: "Saved", value: totalSaved, Icon: Bookmark },
-          { label: "Applied", value: totalApplied, Icon: ClipboardCheck },
-        ].map((tile) => (
-          <div
-            key={tile.label}
-            className="bg-gradient-to-b from-primary/15 to-primary/5 border border-primary/25 rounded-2xl px-4 py-4"
-          >
-            <tile.Icon size={16} className="text-primary mb-2" />
-            <div className="font-mono text-2xl font-semibold text-text">{tile.value}</div>
-            <div className="text-[11px] text-muted uppercase tracking-wider font-medium mt-0.5">{tile.label}</div>
-          </div>
-        ))}
+          { label: "New", value: totalNew, Icon: Inbox, filterValue: "new" },
+          { label: "Saved", value: totalSaved, Icon: Bookmark, filterValue: "saved" },
+          { label: "Applied", value: totalApplied, Icon: ClipboardCheck, filterValue: "applied" },
+        ].map((tile) => {
+          const active = status === tile.filterValue;
+          return (
+            <button
+              key={tile.label}
+              onClick={() => setStatus(active ? "" : tile.filterValue)}
+              className={`text-left bg-gradient-to-b from-primary/15 to-primary/5 border rounded-2xl px-4 py-4 transition ${
+                active ? "border-primary ring-2 ring-primary/30" : "border-primary/25 hover:border-primary/50"
+              }`}
+            >
+              <tile.Icon size={16} className="text-primary mb-2" />
+              <div className="font-mono text-2xl font-semibold text-text">{tile.value}</div>
+              <div className="text-[11px] text-muted uppercase tracking-wider font-medium mt-0.5">{tile.label}</div>
+            </button>
+          );
+        })}
       </div>
 
       {/* Filters */}
@@ -199,7 +205,7 @@ export default function Dashboard() {
       ) : listings.length === 0 ? (
         <div className="text-center py-16 border border-dashed border-border rounded-2xl">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-            <Sparkles size={20} className="text-primary" />
+            <Inbox size={20} className="text-primary" />
           </div>
           <p className="text-sm text-muted">No listings match these filters</p>
         </div>
