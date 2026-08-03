@@ -6,13 +6,13 @@ import {
   Download,
   ExternalLink,
   Bookmark,
-  CheckCircle2,
   XCircle,
   Building2,
   Filter,
   Sparkles,
   ClipboardCheck,
   Send,
+  Radar,
 } from "lucide-react";
 
 type Listing = {
@@ -115,8 +115,9 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
-            <span className="font-bold text-white text-sm">JS</span>
+          <div className="relative w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
+            <Radar size={20} className="text-white" />
+            <span className="absolute inset-0 rounded-xl bg-primary animate-ping opacity-20" />
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight leading-none">JobScout</h1>
