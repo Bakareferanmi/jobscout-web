@@ -14,6 +14,8 @@ import {
   Send,
   Radar,
   ChevronDown,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 type Listing = {
@@ -50,6 +52,18 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [fetching, setFetching] = useState(false);
   const [fetchResult, setFetchResult] = useState<string | null>(null);
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  function toggleTheme() {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -126,14 +140,23 @@ export default function Dashboard() {
               <p className="text-[11px] text-muted mt-1 hidden sm:block">Tracked listings across your target roles</p>
             </div>
           </div>
-          <button
-            onClick={runFetch}
-            disabled={fetching}
-            className="flex items-center gap-2 bg-primary hover:bg-primary-hover active:scale-[0.97] transition-all text-white text-sm font-medium px-4 py-2.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/25"
-          >
-            <RefreshCw size={15} className={fetching ? "animate-spin" : ""} />
-            <span className="hidden sm:inline">{fetching ? "Fetching" : "Fetch new"}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 flex items-center justify-center rounded-xl border border-border bg-elevated hover:border-primary/40 transition shrink-0"
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun size={16} className="text-muted" /> : <Moon size={16} className="text-muted" />}
+            </button>
+            <button
+              onClick={runFetch}
+              disabled={fetching}
+              className="flex items-center gap-2 bg-primary hover:bg-primary-hover active:scale-[0.97] transition-all text-white text-sm font-medium px-4 py-2.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/25"
+            >
+              <RefreshCw size={15} className={fetching ? "animate-spin" : ""} />
+              <span className="hidden sm:inline">{fetching ? "Fetching" : "Fetch new"}</span>
+            </button>
+          </div>
         </div>
       </div>
 

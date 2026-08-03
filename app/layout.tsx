@@ -16,7 +16,21 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${poppins.variable} ${jetbrains.variable}`}>
+    <html lang="en" className={`${poppins.variable} ${jetbrains.variable}`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const stored = localStorage.getItem("theme");
+                const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                const isDark = stored ? stored === "dark" : prefersDark;
+                if (isDark) document.documentElement.classList.add("dark");
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="bg-bg text-text font-sans min-h-screen">{children}</body>
     </html>
   );
