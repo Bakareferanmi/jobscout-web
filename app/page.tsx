@@ -10,7 +10,9 @@ import {
   XCircle,
   Building2,
   Filter,
-  Layers,
+  Sparkles,
+  ClipboardCheck,
+  Send,
 } from "lucide-react";
 
 type Listing = {
@@ -33,9 +35,9 @@ const CATEGORIES = ["frontend", "data-analysis", "digital-marketing", "electrica
 const STATUSES = ["new", "saved", "applied", "rejected"];
 
 function scoreTier(score: number) {
-  if (score >= 12) return { label: "Strong" };
-  if (score >= 8) return { label: "Good" };
-  return { label: "Fair" };
+  if (score >= 12) return { label: "Strong", solid: true };
+  if (score >= 8) return { label: "Good", solid: false };
+  return { label: "Fair", solid: false };
 }
 
 export default function Dashboard() {
@@ -106,20 +108,25 @@ export default function Dashboard() {
   });
 
   const selectClass =
-    "bg-elevated border border-border rounded-sm pl-3 pr-8 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary appearance-none";
+    "bg-elevated border border-border rounded-lg pl-3 pr-8 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary appearance-none font-medium";
 
   return (
-    <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+    <main className="max-w-3xl mx-auto px-4 py-8 space-y-7">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight">JobScout</h1>
-          <p className="text-xs text-muted mt-0.5">Tracked listings across your target roles</p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 shrink-0">
+            <span className="font-bold text-white text-sm">JS</span>
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight leading-none">JobScout</h1>
+            <p className="text-xs text-muted mt-1">Tracked listings across your target roles</p>
+          </div>
         </div>
         <button
           onClick={runFetch}
           disabled={fetching}
-          className="flex items-center gap-2 bg-primary hover:bg-primary-hover active:scale-[0.98] transition text-white text-sm font-medium px-4 py-2.5 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-primary/20"
+          className="flex items-center gap-2 bg-primary hover:bg-primary-hover active:scale-[0.97] transition-all text-white text-sm font-medium px-4 py-2.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/25"
         >
           <RefreshCw size={15} className={fetching ? "animate-spin" : ""} />
           {fetching ? "Fetching" : "Fetch new"}
@@ -127,7 +134,7 @@ export default function Dashboard() {
       </div>
 
       {fetchResult && (
-        <div className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-sm px-3 py-2 -mt-3">
+        <div className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-xl px-3.5 py-2.5 -mt-4 font-medium">
           {fetchResult}
         </div>
       )}
@@ -135,51 +142,46 @@ export default function Dashboard() {
       {/* Stat tiles */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "New", value: totalNew },
-          { label: "Saved", value: totalSaved },
-          { label: "Applied", value: totalApplied },
+          { label: "New", value: totalNew, Icon: Sparkles },
+          { label: "Saved", value: totalSaved, Icon: Bookmark },
+          { label: "Applied", value: totalApplied, Icon: ClipboardCheck },
         ].map((tile) => (
           <div
             key={tile.label}
-            className="bg-primary/10 border border-primary/25 border-t-2 border-t-primary rounded-md px-4 py-3"
+            className="bg-gradient-to-b from-primary/15 to-primary/5 border border-primary/25 rounded-2xl px-4 py-4"
           >
-            <div className="text-[11px] text-muted uppercase tracking-wider font-medium">{tile.label}</div>
-            <div className="font-mono text-2xl mt-1 font-semibold text-primary">{tile.value}</div>
+            <tile.Icon size={16} className="text-primary mb-2" />
+            <div className="font-mono text-2xl font-semibold text-text">{tile.value}</div>
+            <div className="text-[11px] text-muted uppercase tracking-wider font-medium mt-0.5">{tile.label}</div>
           </div>
         ))}
       </div>
 
       {/* Filters */}
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-1.5 text-muted text-xs mr-1">
-          <Filter size={13} />
-        </div>
-        <div className="relative">
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className={selectClass}>
-            <option value="">All categories</option>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-        <div className="relative">
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectClass}>
-            <option value="">All statuses</option>
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
+        <Filter size={14} className="text-muted mr-1" />
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className={selectClass}>
+          <option value="">All categories</option>
+          {CATEGORIES.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectClass}>
+          <option value="">All statuses</option>
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
         <input
           type="number"
           placeholder="Min score"
           value={minScore}
           onChange={(e) => setMinScore(e.target.value)}
-          className="bg-elevated border border-border rounded-sm px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+          className="bg-elevated border border-border rounded-lg px-3 py-2.5 text-sm w-24 font-medium focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
         />
         <a
           href={`/api/export?${exportParams}`}
-          className="flex items-center gap-1.5 bg-primary/15 border border-primary/25 hover:bg-primary/25 transition rounded-sm px-3 py-2 text-sm text-primary ml-auto"
+          className="flex items-center gap-1.5 bg-primary/15 border border-primary/25 hover:bg-primary/25 transition rounded-lg px-3.5 py-2.5 text-sm text-primary ml-auto font-medium"
         >
           <Download size={14} />
           Export
@@ -188,51 +190,55 @@ export default function Dashboard() {
 
       {/* Listings */}
       {loading ? (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-primary/10 border border-primary/40 rounded-md p-4 h-20 animate-pulse" />
+            <div key={i} className="bg-surface border border-border rounded-2xl p-5 h-24 animate-pulse" />
           ))}
         </div>
       ) : listings.length === 0 ? (
-        <div className="text-center py-12 text-muted text-sm border border-dashed border-primary/25 rounded-md">
-          <Layers size={24} className="mx-auto mb-2 opacity-40" />
-          No listings match these filters
+        <div className="text-center py-16 border border-dashed border-border rounded-2xl">
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+            <Sparkles size={20} className="text-primary" />
+          </div>
+          <p className="text-sm text-muted">No listings match these filters</p>
         </div>
       ) : (
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {listings.map((l) => {
             const tier = scoreTier(l.score);
             return (
               <div
                 key={l.id}
-                className="bg-primary/10 border border-primary/40 hover:border-primary/70 hover:bg-primary/[0.14] transition rounded-md p-4"
+                className="bg-surface border border-border hover:border-primary/40 hover:-translate-y-0.5 transition-all rounded-2xl p-5 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium leading-snug truncate">{l.title}</div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted mt-1.5">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[15px] font-semibold leading-snug">{l.title}</div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted mt-2">
                       <Building2 size={12} />
                       <span className="truncate">{l.company || "Unknown"}</span>
                       <span className="text-border">·</span>
-                      <span className="capitalize">{l.category.replace("-", " ")}</span>
-                      <span className="text-border">·</span>
                       <span>{l.source}</span>
                     </div>
-                  </div>
-                  <div className="shrink-0 flex flex-col items-end gap-0.5">
-                    <span className="font-mono text-sm font-semibold text-primary bg-primary/15 px-2 py-0.5 rounded-full">
-                      {l.score}
+                    <span className="inline-block mt-2.5 text-[11px] font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-full capitalize">
+                      {l.category.replace("-", " ")}
                     </span>
-                    <span className="text-[10px] text-muted uppercase tracking-wide">{tier.label}</span>
+                  </div>
+                  <div
+                    className={`shrink-0 flex flex-col items-center justify-center w-12 h-12 rounded-full ${
+                      tier.solid ? "bg-primary text-white" : "bg-primary/10 text-primary"
+                    }`}
+                  >
+                    <span className="font-mono text-sm font-bold leading-none">{l.score}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 mt-3.5 pt-3 border-t border-primary/20">
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
                   <a
                     href={l.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-primary hover:underline"
+                    className="flex items-center gap-1 text-xs text-primary font-medium hover:underline"
                   >
                     <ExternalLink size={12} />
                     View
@@ -240,21 +246,21 @@ export default function Dashboard() {
                   <div className="flex items-center gap-1.5 ml-auto">
                     <button
                       onClick={() => updateStatus(l.id, "saved")}
-                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-sm bg-primary/15 text-primary hover:bg-primary/25 transition font-medium"
+                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition font-medium"
                     >
                       <Bookmark size={12} />
                       Save
                     </button>
                     <button
                       onClick={() => updateStatus(l.id, "applied")}
-                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-sm bg-primary text-white hover:bg-primary-hover transition font-medium"
+                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover transition font-medium"
                     >
-                      <CheckCircle2 size={12} />
+                      <Send size={12} />
                       Applied
                     </button>
                     <button
                       onClick={() => updateStatus(l.id, "rejected")}
-                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-sm border border-primary/20 text-muted hover:bg-primary/10 hover:text-primary transition"
+                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg border border-border text-muted hover:bg-error/10 hover:text-error hover:border-error/30 transition"
                     >
                       <XCircle size={12} />
                       Reject
