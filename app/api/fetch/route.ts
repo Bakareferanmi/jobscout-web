@@ -1,11 +1,11 @@
 import { pool } from "@/lib/db";
 import { CATEGORIES, REDDIT_SUBS, WWR_FEEDS } from "@/lib/config";
-import { fetchRemotive, fetchRemoteok, fetchArbeitnow, fetchJobicy, fetchWwrRss, fetchReddit, RawListing } from "@/lib/sources";
+import { fetchRemotive, fetchRemoteok, fetchArbeitnow, fetchJobicy, fetchWwrRss, fetchReddit, fetchHimalayas, RawListing } from "@/lib/sources";
 import { matchesCategory, scoreListing } from "@/lib/scoring";
 import { createHash } from "crypto";
 import { NextRequest } from "next/server";
 
-export const maxDuration = 60; // Vercel Hobby allows up to 60s for Node functions
+export const maxDuration = 60;
 
 function makeId(source: string, url: string): string {
   return createHash("sha256").update(`${source}:${url}`).digest("hex").slice(0, 16);
@@ -65,13 +65,13 @@ export async function POST(request: NextRequest) {
       fetchRemoteok(cfg.remoteokTags),
       fetchArbeitnow(cfg.mustIncludeAny[0] || ""),
       fetchJobicy(cfg.remoteokTags[0] || ""),
+      fetchHimalayas(cfg.mustIncludeAny[0] || ""),
     ];
     if (WWR_FEEDS[cat]) tasks.push(fetchWwrRss(WWR_FEEDS[cat]));
 
     const jobResults = await Promise.all(tasks);
     let raw: RawListing[] = jobResults.flat();
 
-    // Reddit stays sequential — it's rate-limit sensitive
     for (const sub of REDDIT_SUBS[cat] || []) {
       raw = raw.concat(await fetchReddit(sub));
     }
