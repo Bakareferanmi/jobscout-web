@@ -28,6 +28,8 @@ export default function Dashboard() {
   const [status, setStatus] = useState("");
   const [minScore, setMinScore] = useState("");
   const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
+  const [fetchResult, setFetchResult] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,13 +61,41 @@ export default function Dashboard() {
     load();
   }
 
+  async function runFetch() {
+    setFetching(true);
+    setFetchResult(null);
+    try {
+      const params = new URLSearchParams();
+      if (category) params.set("category", category);
+      const res = await fetch(`/api/fetch?${params}`, { method: "POST" });
+      const data = await res.json();
+      setFetchResult(`+${data.totalNew} new listing(s)`);
+      await load();
+    } catch {
+      setFetchResult("Fetch failed — check connection");
+    } finally {
+      setFetching(false);
+    }
+  }
+
   const totalNew = stats.filter((s) => s.status === "new").reduce((sum, s) => sum + s.n, 0);
   const totalSaved = stats.filter((s) => s.status === "saved").reduce((sum, s) => sum + s.n, 0);
   const totalApplied = stats.filter((s) => s.status === "applied").reduce((sum, s) => sum + s.n, 0);
 
   return (
     <main className="max-w-3xl mx-auto p-4 space-y-6">
-      <h1 className="text-xl font-semibold">JobScout</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-xl font-semibold">JobScout</h1>
+        <button
+          onClick={runFetch}
+          disabled={fetching}
+          className="bg-primary text-white text-sm px-4 py-2 rounded-sm disabled:opacity-50"
+        >
+          {fetching ? "Fetching..." : "Fetch new"}
+        </button>
+      </div>
+
+      {fetchResult && <p className="text-xs text-muted -mt-4">{fetchResult}</p>}
 
       {/* Stat tiles */}
       <div className="grid grid-cols-3 gap-3">
