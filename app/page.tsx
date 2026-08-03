@@ -33,9 +33,9 @@ const CATEGORIES = ["frontend", "data-analysis", "digital-marketing", "electrica
 const STATUSES = ["new", "saved", "applied", "rejected"];
 
 function scoreTier(score: number) {
-  if (score >= 12) return { label: "Strong", color: "text-success", ring: "ring-success/30" };
-  if (score >= 8) return { label: "Good", color: "text-info", ring: "ring-info/30" };
-  return { label: "Fair", color: "text-muted", ring: "ring-border" };
+  if (score >= 12) return { label: "Strong" };
+  if (score >= 8) return { label: "Good" };
+  return { label: "Fair" };
 }
 
 export default function Dashboard() {
@@ -127,7 +127,7 @@ export default function Dashboard() {
       </div>
 
       {fetchResult && (
-        <div className="text-xs text-info bg-info/10 border border-info/20 rounded-sm px-3 py-2 -mt-3">
+        <div className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-sm px-3 py-2 -mt-3">
           {fetchResult}
         </div>
       )}
@@ -135,16 +135,16 @@ export default function Dashboard() {
       {/* Stat tiles */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "New", value: totalNew, color: "text-info", border: "border-t-info" },
-          { label: "Saved", value: totalSaved, color: "text-warning", border: "border-t-warning" },
-          { label: "Applied", value: totalApplied, color: "text-success", border: "border-t-success" },
+          { label: "New", value: totalNew },
+          { label: "Saved", value: totalSaved },
+          { label: "Applied", value: totalApplied },
         ].map((tile) => (
           <div
             key={tile.label}
-            className={`bg-surface border border-border ${tile.border} border-t-2 rounded-md px-4 py-3`}
+            className="bg-primary/10 border border-primary/25 border-t-2 border-t-primary rounded-md px-4 py-3"
           >
             <div className="text-[11px] text-muted uppercase tracking-wider font-medium">{tile.label}</div>
-            <div className={`font-mono text-2xl mt-1 font-semibold ${tile.color}`}>{tile.value}</div>
+            <div className="font-mono text-2xl mt-1 font-semibold text-primary">{tile.value}</div>
           </div>
         ))}
       </div>
@@ -179,7 +179,7 @@ export default function Dashboard() {
         />
         <a
           href={`/api/export?${exportParams}`}
-          className="flex items-center gap-1.5 bg-elevated border border-border hover:border-primary/40 hover:text-text transition rounded-sm px-3 py-2 text-sm text-muted ml-auto"
+          className="flex items-center gap-1.5 bg-primary/15 border border-primary/25 hover:bg-primary/25 transition rounded-sm px-3 py-2 text-sm text-primary ml-auto"
         >
           <Download size={14} />
           Export
@@ -190,11 +190,11 @@ export default function Dashboard() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-surface border border-border rounded-md p-4 h-20 animate-pulse" />
+            <div key={i} className="bg-primary/[0.04] border border-primary/20 rounded-md p-4 h-20 animate-pulse" />
           ))}
         </div>
       ) : listings.length === 0 ? (
-        <div className="text-center py-12 text-muted text-sm border border-dashed border-border rounded-md">
+        <div className="text-center py-12 text-muted text-sm border border-dashed border-primary/25 rounded-md">
           <Layers size={24} className="mx-auto mb-2 opacity-40" />
           No listings match these filters
         </div>
@@ -205,7 +205,7 @@ export default function Dashboard() {
             return (
               <div
                 key={l.id}
-                className="bg-surface border border-border hover:border-primary/30 transition rounded-md p-4"
+                className="bg-primary/[0.04] border border-primary/20 hover:border-primary/50 hover:bg-primary/[0.07] transition rounded-md p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -219,18 +219,20 @@ export default function Dashboard() {
                       <span>{l.source}</span>
                     </div>
                   </div>
-                  <div className={`shrink-0 flex flex-col items-end gap-0.5`}>
-                    <span className={`font-mono text-sm font-semibold ${tier.color}`}>{l.score}</span>
+                  <div className="shrink-0 flex flex-col items-end gap-0.5">
+                    <span className="font-mono text-sm font-semibold text-primary bg-primary/15 px-2 py-0.5 rounded-full">
+                      {l.score}
+                    </span>
                     <span className="text-[10px] text-muted uppercase tracking-wide">{tier.label}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 mt-3.5 pt-3 border-t border-border">
+                <div className="flex items-center gap-2 mt-3.5 pt-3 border-t border-primary/15">
                   <a
                     href={l.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-xs text-info hover:underline"
+                    className="flex items-center gap-1 text-xs text-primary hover:underline"
                   >
                     <ExternalLink size={12} />
                     View
@@ -238,21 +240,21 @@ export default function Dashboard() {
                   <div className="flex items-center gap-1.5 ml-auto">
                     <button
                       onClick={() => updateStatus(l.id, "saved")}
-                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-sm border border-border text-warning hover:bg-warning/10 hover:border-warning/40 transition"
+                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-sm bg-primary/15 text-primary hover:bg-primary/25 transition font-medium"
                     >
                       <Bookmark size={12} />
                       Save
                     </button>
                     <button
                       onClick={() => updateStatus(l.id, "applied")}
-                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-sm border border-border text-success hover:bg-success/10 hover:border-success/40 transition"
+                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-sm bg-primary text-white hover:bg-primary-hover transition font-medium"
                     >
                       <CheckCircle2 size={12} />
                       Applied
                     </button>
                     <button
                       onClick={() => updateStatus(l.id, "rejected")}
-                      className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-sm border border-border text-error hover:bg-error/10 hover:border-error/40 transition"
+                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-sm border border-primary/20 text-muted hover:bg-primary/10 hover:text-primary transition"
                     >
                       <XCircle size={12} />
                       Reject
