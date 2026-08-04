@@ -13,6 +13,7 @@ import {
   Moon,
   Rocket,
   Bookmark,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -190,6 +191,13 @@ export default function LeadsPage() {
               <option key={t} value={t}>{t.replace(/-/g, " ")}</option>
             ))}
           </select>
+          <a
+            href={`/api/leads/export${statusFilter ? `?status=${statusFilter}` : ""}`}
+            className="flex items-center gap-1.5 bg-primary/15 border border-primary/25 hover:bg-primary/25 transition rounded-xl px-3.5 py-2.5 text-sm text-primary font-medium"
+          >
+            <Download size={14} />
+            Export
+          </a>
           <button
             onClick={runFetch}
             disabled={fetching}
