@@ -14,7 +14,9 @@ import {
   Sun,
   Moon,
   Send,
+  Rocket,
 } from "lucide-react";
+import Link from "next/link";
 
 type Listing = {
   id: string;
@@ -36,7 +38,6 @@ const CATEGORIES = ["frontend", "data-analysis", "digital-marketing", "electrica
 const STATUSES = ["new", "saved", "applied", "rejected"];
 
 function signalBars(score: number) {
-  // Maps score to 1-4 filled bars, like a signal strength readout
   if (score >= 14) return 4;
   if (score >= 10) return 3;
   if (score >= 6) return 2;
@@ -189,6 +190,16 @@ export default function Dashboard() {
               <span className="hidden sm:inline">{fetching ? "Scanning" : "Scan now"}</span>
             </button>
           </div>
+        </div>
+        <div className="max-w-3xl mx-auto px-4 pb-3 flex gap-2 text-xs">
+          <span className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-medium flex items-center gap-1.5">
+            <Radar size={12} />
+            Jobs
+          </span>
+          <Link href="/leads" className="px-3 py-1.5 rounded-lg text-muted hover:bg-elevated transition flex items-center gap-1.5">
+            <Rocket size={12} />
+            Leads
+          </Link>
         </div>
       </div>
 
