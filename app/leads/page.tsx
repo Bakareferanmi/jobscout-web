@@ -31,10 +31,14 @@ type Lead = {
   status: string;
 };
 
+type StatRow = { status: string; n: number };
+
 const TOPICS = ["developer-tools", "artificial-intelligence", "saas", "no-code", "design-tools", "marketing"];
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [stats, setStats] = useState<StatRow[]>([]);
+  const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [fetching, setFetching] = useState(false);
   const [topic, setTopic] = useState("developer-tools");
@@ -54,10 +58,18 @@ export default function LeadsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/leads?limit=50");
-    setLeads(await res.json());
+    const params = new URLSearchParams();
+    if (statusFilter) params.set("status", statusFilter);
+    params.set("limit", "50");
+
+    const [leadsRes, statsRes] = await Promise.all([
+      fetch(`/api/leads?${params}`).then((r) => r.json()),
+      fetch("/api/leads/stats").then((r) => r.json()),
+    ]);
+    setLeads(leadsRes);
+    setStats(statsRes);
     setLoading(false);
-  }, []);
+  }, [statusFilter]);
 
   useEffect(() => {
     load();
@@ -86,6 +98,16 @@ export default function LeadsPage() {
     });
     load();
   }
+
+  const totalNew = stats.filter((s) => s.status === "new").reduce((sum, s) => sum + s.n, 0);
+  const totalContacted = stats.filter((s) => s.status === "contacted").reduce((sum, s) => sum + s.n, 0);
+  const totalDismissed = stats.filter((s) => s.status === "dismissed").reduce((sum, s) => sum + s.n, 0);
+
+  const statTiles = [
+    { label: "New", value: totalNew, filterValue: "new" },
+    { label: "Contacted", value: totalContacted, filterValue: "contacted" },
+    { label: "Dismissed", value: totalDismissed, filterValue: "dismissed" },
+  ];
 
   return (
     <div className="min-h-screen">
@@ -125,6 +147,36 @@ export default function LeadsPage() {
       </div>
 
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+        {fetchResult && (
+          <div className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-xl px-3.5 py-2.5 font-mono">
+            {fetchResult}
+          </div>
+        )}
+
+        {/* Stat strip */}
+        <div className="flex bg-surface border border-border rounded-2xl overflow-hidden">
+          {statTiles.map((tile, i) => {
+            const active = statusFilter === tile.filterValue;
+            return (
+              <button
+                key={tile.label}
+                onClick={() => setStatusFilter(active ? "" : tile.filterValue)}
+                className={`flex-1 text-left px-4 py-4 transition-colors relative ${
+                  active ? "bg-primary/10" : "hover:bg-elevated"
+                } ${i > 0 ? "border-l border-border" : ""}`}
+              >
+                {active && <span className="absolute top-0 left-0 right-0 h-0.5 bg-primary" />}
+                <div className="font-mono text-2xl font-semibold leading-none text-text">
+                  {String(tile.value).padStart(2, "0")}
+                </div>
+                <div className="text-[10px] text-muted uppercase tracking-widest font-medium mt-2">
+                  {tile.label}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
         <div className="flex items-center gap-2 flex-wrap">
           <select
             value={topic}
@@ -145,12 +197,6 @@ export default function LeadsPage() {
           </button>
         </div>
 
-        {fetchResult && (
-          <div className="text-xs text-primary bg-primary/10 border border-primary/20 rounded-xl px-3.5 py-2.5 font-mono">
-            {fetchResult}
-          </div>
-        )}
-
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -160,7 +206,7 @@ export default function LeadsPage() {
         ) : leads.length === 0 ? (
           <div className="text-center py-16 border border-dashed border-border rounded-2xl">
             <Rocket size={24} className="text-primary mx-auto mb-3 opacity-50" />
-            <p className="text-sm text-muted">No launches yet — tap fetch to pull today&apos;s top products</p>
+            <p className="text-sm text-muted">No launches match these filters</p>
           </div>
         ) : (
           <div className="space-y-3">
