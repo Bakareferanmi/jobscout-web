@@ -12,6 +12,7 @@ import {
   Sun,
   Moon,
   Rocket,
+  Bookmark,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -100,11 +101,13 @@ export default function LeadsPage() {
   }
 
   const totalNew = stats.filter((s) => s.status === "new").reduce((sum, s) => sum + s.n, 0);
+  const totalSaved = stats.filter((s) => s.status === "saved").reduce((sum, s) => sum + s.n, 0);
   const totalContacted = stats.filter((s) => s.status === "contacted").reduce((sum, s) => sum + s.n, 0);
   const totalDismissed = stats.filter((s) => s.status === "dismissed").reduce((sum, s) => sum + s.n, 0);
 
   const statTiles = [
     { label: "New", value: totalNew, filterValue: "new" },
+    { label: "Saved", value: totalSaved, filterValue: "saved" },
     { label: "Contacted", value: totalContacted, filterValue: "contacted" },
     { label: "Dismissed", value: totalDismissed, filterValue: "dismissed" },
   ];
@@ -161,15 +164,15 @@ export default function LeadsPage() {
               <button
                 key={tile.label}
                 onClick={() => setStatusFilter(active ? "" : tile.filterValue)}
-                className={`flex-1 text-left px-4 py-4 transition-colors relative ${
+                className={`flex-1 text-left px-3 py-4 transition-colors relative ${
                   active ? "bg-primary/10" : "hover:bg-elevated"
                 } ${i > 0 ? "border-l border-border" : ""}`}
               >
                 {active && <span className="absolute top-0 left-0 right-0 h-0.5 bg-primary" />}
-                <div className="font-mono text-2xl font-semibold leading-none text-text">
+                <div className="font-mono text-xl font-semibold leading-none text-text">
                   {String(tile.value).padStart(2, "0")}
                 </div>
-                <div className="text-[10px] text-muted uppercase tracking-widest font-medium mt-2">
+                <div className="text-[9px] text-muted uppercase tracking-widest font-medium mt-2">
                   {tile.label}
                 </div>
               </button>
@@ -253,6 +256,13 @@ export default function LeadsPage() {
                     </a>
                   )}
                   <div className="flex items-center gap-1.5 ml-auto">
+                    <button
+                      onClick={() => updateStatus(l.id, "saved")}
+                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition font-medium"
+                    >
+                      <Bookmark size={12} />
+                      Save
+                    </button>
                     <button
                       onClick={() => updateStatus(l.id, "contacted")}
                       className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover transition font-medium"

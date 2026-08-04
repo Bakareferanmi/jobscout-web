@@ -7,7 +7,7 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const body = await request.json();
-  const validStatuses = ["new", "contacted", "dismissed"];
+  const validStatuses = ["new", "saved", "contacted", "dismissed"];
   if (!validStatuses.includes(body.status)) {
     return Response.json({ error: "Invalid status" }, { status: 400 });
   }
