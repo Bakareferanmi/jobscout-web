@@ -37,31 +37,6 @@ type StatRow = { category: string; status: string; n: number };
 const CATEGORIES = ["frontend", "data-analysis", "digital-marketing", "electrical", "it-support"];
 const STATUSES = ["new", "saved", "applied", "rejected"];
 
-function signalBars(score: number) {
-  if (score >= 14) return 4;
-  if (score >= 10) return 3;
-  if (score >= 6) return 2;
-  return 1;
-}
-
-function SignalMeter({ score }: { score: number }) {
-  const filled = signalBars(score);
-  return (
-    <div className="flex flex-col items-end gap-1.5">
-      <div className="flex items-end gap-0.5 h-4">
-        {[1, 2, 3, 4].map((bar) => (
-          <div
-            key={bar}
-            className={`w-1 rounded-full transition-colors ${bar <= filled ? "bg-primary" : "bg-border"}`}
-            style={{ height: `${bar * 25}%` }}
-          />
-        ))}
-      </div>
-      <span className="font-mono text-xs font-bold text-primary leading-none">{score}</span>
-    </div>
-  );
-}
-
 export default function Dashboard() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [stats, setStats] = useState<StatRow[]>([]);
@@ -279,7 +254,7 @@ export default function Dashboard() {
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-surface border border-border rounded-2xl p-5 h-28 animate-pulse" />
+              <div key={i} className="bg-surface border border-border rounded-2xl p-5 h-32 animate-pulse" />
             ))}
           </div>
         ) : listings.length === 0 ? (
@@ -292,25 +267,27 @@ export default function Dashboard() {
             {listings.map((l) => (
               <div
                 key={l.id}
-                className="bg-surface border border-border border-l-4 border-l-primary/60 hover:border-l-primary hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20 transition-all rounded-2xl p-5"
+                className="bg-surface border border-border hover:border-primary/40 transition-all rounded-2xl p-5"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
-                    <div className="text-[15px] font-semibold leading-snug tracking-tight">{l.title}</div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted mt-2">
+                    <div className="text-[15px] font-semibold leading-snug">{l.title}</div>
+                    <p className="text-xs text-muted mt-1.5 leading-relaxed flex items-center gap-1.5">
                       <Building2 size={12} className="shrink-0" />
-                      <span className="truncate">{l.company || "Unknown"}</span>
-                      <span className="text-border">·</span>
-                      <span className="shrink-0">{l.source}</span>
+                      {l.company || "Unknown"}
+                    </p>
+                    <div className="flex items-center gap-3 text-xs text-muted mt-2.5 font-mono">
+                      <span className="flex items-center gap-1 text-primary font-semibold">
+                        <Radar size={12} />
+                        {l.score}
+                      </span>
+                      <span>{l.source}</span>
                     </div>
-                    <span className="inline-block mt-2.5 text-[11px] font-mono text-primary/80">
-                      #{l.category.replace(/-/g, "_")}
-                    </span>
+                    <p className="text-xs text-primary mt-2">#{l.category.replace(/-/g, "_")}</p>
                   </div>
-                  <SignalMeter score={l.score} />
                 </div>
 
-                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-dashed border-border">
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border flex-wrap">
                   <a
                     href={l.url}
                     target="_blank"
@@ -323,21 +300,21 @@ export default function Dashboard() {
                   <div className="flex items-center gap-1.5 ml-auto">
                     <button
                       onClick={() => updateStatus(l.id, "saved")}
-                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 active:scale-95 transition font-medium"
+                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition font-medium"
                     >
                       <Bookmark size={12} />
                       Save
                     </button>
                     <button
                       onClick={() => updateStatus(l.id, "applied")}
-                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover active:scale-95 transition font-medium"
+                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover transition font-medium"
                     >
                       <Send size={12} />
                       Applied
                     </button>
                     <button
                       onClick={() => updateStatus(l.id, "rejected")}
-                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg border border-border text-muted hover:bg-error/10 hover:text-error hover:border-error/30 active:scale-95 transition"
+                      className="flex items-center gap-1 text-xs px-3 py-2 rounded-lg border border-border text-muted hover:bg-error/10 hover:text-error transition"
                     >
                       <XCircle size={12} />
                       Reject
