@@ -48,6 +48,14 @@ export const CATEGORIES: Record<string, CategoryConfig> = {
     remotiveCategory: "all-others",
     remoteokTags: ["support", "helpdesk", "it"],
   },
+  web3: {
+    label: "Web3 / Blockchain",
+    mustIncludeAny: ["web3", "blockchain", "smart contract", "solidity", "defi", "crypto", "dapp", "ethereum", "solana"],
+    levelInclude: [],
+    exclude: ["senior", "staff", "principal", "head of", "director", "10+ years", "8+ years"],
+    remotiveCategory: "all-others",
+    remoteokTags: ["web3", "crypto", "blockchain"],
+  },
 };
 
 // Upwork's public RSS is confirmed dead (410 Gone as of last check), so this
@@ -58,6 +66,7 @@ export const CLIENT_SEARCH_TERMS: Record<string, string[]> = {
   "digital-marketing": ["social media manager", "digital marketing", "content marketing"],
   electrical: ["iot developer", "embedded systems", "electrical design"],
   "it-support": ["it support", "technical support specialist", "helpdesk"],
+  web3: ["web3 developer", "blockchain developer", "smart contract audit"],
 };
 
 export const REDDIT_SUBS: Record<string, string[]> = {
@@ -66,6 +75,7 @@ export const REDDIT_SUBS: Record<string, string[]> = {
   "digital-marketing": ["forhire", "socialmediajobs"],
   electrical: ["forhire"],
   "it-support": ["forhire", "jobbit"],
+  web3: ["web3", "ethdev", "CryptoCurrency"],
 };
 
 // Corrected URL — WeWorkRemotely renamed this category from
@@ -75,4 +85,3 @@ export const WWR_FEEDS: Record<string, string> = {
   "digital-marketing": "https://weworkremotely.com/categories/remote-sales-and-marketing-jobs.rss",
   "it-support": "https://weworkremotely.com/categories/remote-customer-support-jobs.rss",
 };
-

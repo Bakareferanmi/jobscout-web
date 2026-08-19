@@ -59,7 +59,7 @@ const COMMERCIAL_VALUE_STYLES: Record<string, string> = {
 
 type StatRow = { category: string; status: string; n: number };
 
-const CATEGORIES = ["frontend", "data-analysis", "digital-marketing", "electrical", "it-support"];
+const CATEGORIES = ["frontend", "data-analysis", "digital-marketing", "electrical", "it-support", "web3"];
 const STATUSES = ["new", "saved", "applied", "rejected"];
 
 export default function Dashboard() {
