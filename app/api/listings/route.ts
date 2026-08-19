@@ -1,7 +1,9 @@
-import { pool } from "@/lib/db";
+import { pool, ensureSchema } from "@/lib/db";
 import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
+  await ensureSchema();
+
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");
   const status = searchParams.get("status");

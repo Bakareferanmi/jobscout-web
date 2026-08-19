@@ -15,6 +15,10 @@ import {
   Moon,
   Send,
   Rocket,
+  MessageSquarePlus,
+  Copy,
+  Check,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -30,6 +34,27 @@ type Listing = {
   score: number;
   status: string;
   fetched_at: string;
+  opportunity_type: string | null;
+  match_score: number | null;
+  lead_type: string | null;
+  commercial_value: string | null;
+  recommended_action: string | null;
+};
+
+const OPPORTUNITY_STYLES: Record<string, string> = {
+  JOB: "bg-elevated text-muted border-border",
+  CLIENT: "bg-primary/15 text-primary border-primary/30",
+  STARTUP: "bg-amber-500/15 text-amber-500 border-amber-500/30",
+  FREELANCE: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
+  WEB3: "bg-violet-500/15 text-violet-400 border-violet-500/30",
+  IGNORE: "bg-elevated text-muted border-border",
+};
+
+const COMMERCIAL_VALUE_STYLES: Record<string, string> = {
+  HIGH: "bg-emerald-500/15 text-emerald-500",
+  MEDIUM: "bg-amber-500/15 text-amber-500",
+  LOW: "bg-elevated text-muted",
+  NONE: "bg-elevated text-muted",
 };
 
 type StatRow = { category: string; status: string; n: number };
@@ -47,6 +72,10 @@ export default function Dashboard() {
   const [fetching, setFetching] = useState(false);
   const [fetchResult, setFetchResult] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(true);
+  const [openPitchId, setOpenPitchId] = useState<string | null>(null);
+  const [pitchLoading, setPitchLoading] = useState<string | null>(null);
+  const [pitches, setPitches] = useState<Record<string, { subject: string; message: string }>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
@@ -87,6 +116,32 @@ export default function Dashboard() {
       body: JSON.stringify({ status: newStatus }),
     });
     load();
+  }
+
+  async function togglePitch(id: string) {
+    if (openPitchId === id) {
+      setOpenPitchId(null);
+      return;
+    }
+    setOpenPitchId(id);
+    if (!pitches[id]) {
+      setPitchLoading(id);
+      try {
+        const res = await fetch(`/api/pitch/${id}`);
+        const data = await res.json();
+        if (res.ok) setPitches((prev) => ({ ...prev, [id]: data }));
+      } finally {
+        setPitchLoading(null);
+      }
+    }
+  }
+
+  async function copyPitch(id: string) {
+    const pitch = pitches[id];
+    if (!pitch) return;
+    await navigator.clipboard.writeText(`Subject: ${pitch.subject}\n\n${pitch.message}`);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 1500);
   }
 
   async function runFetch() {
@@ -284,6 +339,31 @@ export default function Dashboard() {
                       <span>{l.source}</span>
                     </div>
                     <p className="text-xs text-primary mt-2">#{l.category.replace(/-/g, "_")}</p>
+                    {l.opportunity_type && (
+                      <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+                        <span
+                          className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md border ${
+                            OPPORTUNITY_STYLES[l.opportunity_type] || OPPORTUNITY_STYLES.JOB
+                          }`}
+                        >
+                          {l.opportunity_type}
+                        </span>
+                        {l.commercial_value && l.commercial_value !== "NONE" && (
+                          <span
+                            className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md ${
+                              COMMERCIAL_VALUE_STYLES[l.commercial_value] || COMMERCIAL_VALUE_STYLES.LOW
+                            }`}
+                          >
+                            {l.commercial_value} value
+                          </span>
+                        )}
+                        {l.match_score !== null && (
+                          <span className="text-[10px] font-mono text-muted">
+                            match {l.match_score}%
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -297,6 +377,15 @@ export default function Dashboard() {
                     <ExternalLink size={12} />
                     View
                   </a>
+                  {l.recommended_action && l.recommended_action !== "IGNORE" && (
+                    <button
+                      onClick={() => togglePitch(l.id)}
+                      className="flex items-center gap-1 text-xs text-primary font-medium hover:underline"
+                    >
+                      <MessageSquarePlus size={12} />
+                      Pitch
+                    </button>
+                  )}
                   <div className="flex items-center gap-1.5 ml-auto">
                     <button
                       onClick={() => updateStatus(l.id, "saved")}
@@ -321,6 +410,33 @@ export default function Dashboard() {
                     </button>
                   </div>
                 </div>
+
+                {openPitchId === l.id && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    {pitchLoading === l.id ? (
+                      <div className="flex items-center gap-2 text-xs text-muted py-4 justify-center font-mono">
+                        <Loader2 size={14} className="animate-spin" />
+                        Writing pitch
+                      </div>
+                    ) : pitches[l.id] ? (
+                      <div className="bg-elevated border border-border rounded-xl p-3.5 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-semibold text-text">{pitches[l.id].subject}</p>
+                          <button
+                            onClick={() => copyPitch(l.id)}
+                            className="flex items-center gap-1 text-[11px] text-primary font-medium shrink-0 hover:underline"
+                          >
+                            {copiedId === l.id ? <Check size={12} /> : <Copy size={12} />}
+                            {copiedId === l.id ? "Copied" : "Copy"}
+                          </button>
+                        </div>
+                        <p className="text-xs text-muted whitespace-pre-line leading-relaxed">
+                          {pitches[l.id].message}
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               </div>
             ))}
           </div>
