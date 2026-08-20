@@ -14,6 +14,8 @@ import {
   Rocket,
   Bookmark,
   Download,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -46,6 +48,7 @@ export default function LeadsPage() {
   const [topic, setTopic] = useState("developer-tools");
   const [fetchResult, setFetchResult] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
@@ -62,6 +65,7 @@ export default function LeadsPage() {
     setLoading(true);
     const params = new URLSearchParams();
     if (statusFilter) params.set("status", statusFilter);
+    if (showCompleted) params.set("showDone", "1");
     params.set("limit", "50");
 
     const [leadsRes, statsRes] = await Promise.all([
@@ -71,7 +75,7 @@ export default function LeadsPage() {
     setLeads(leadsRes);
     setStats(statsRes);
     setLoading(false);
-  }, [statusFilter]);
+  }, [statusFilter, showCompleted]);
 
   useEffect(() => {
     load();
@@ -93,11 +97,19 @@ export default function LeadsPage() {
   }
 
   async function updateStatus(id: string, status: string) {
-    await fetch(`/api/leads/${id}`, {
+    setLeads((prev) =>
+      !showCompleted && (status === "contacted" || status === "dismissed")
+        ? prev.filter((l) => l.id !== id)
+        : prev.map((l) => (l.id === id ? { ...l, status } : l))
+    );
+    const res = await fetch(`/api/leads/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
+    if (!res.ok) {
+      setFetchResult("Status update failed — reloading to show the real state");
+    }
     load();
   }
 
@@ -198,6 +210,17 @@ export default function LeadsPage() {
             <Download size={14} />
             Export
           </a>
+          <button
+            onClick={() => setShowCompleted((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition border ${
+              showCompleted
+                ? "bg-primary/15 border-primary/30 text-primary"
+                : "bg-elevated border-border text-muted hover:border-primary/40"
+            }`}
+          >
+            {showCompleted ? <Eye size={14} /> : <EyeOff size={14} />}
+            <span className="hidden sm:inline">Completed</span>
+          </button>
           <button
             onClick={runFetch}
             disabled={fetching}
