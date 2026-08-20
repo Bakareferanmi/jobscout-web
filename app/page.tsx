@@ -20,6 +20,8 @@ import {
   Check,
   Loader2,
   UserRound,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -80,6 +82,7 @@ export default function Dashboard() {
   const [pitchLoading, setPitchLoading] = useState<string | null>(null);
   const [pitches, setPitches] = useState<Record<string, { subject: string; message: string }>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
@@ -101,6 +104,7 @@ export default function Dashboard() {
     if (opportunityType) params.set("opportunityType", opportunityType);
     if (commercialValue) params.set("commercialValue", commercialValue);
     if (sort !== "score") params.set("sort", sort);
+    if (showCompleted) params.set("showDone", "1");
     params.set("limit", "50");
 
     const [listingsRes, statsRes] = await Promise.all([
@@ -110,13 +114,21 @@ export default function Dashboard() {
     setListings(listingsRes);
     setStats(statsRes);
     setLoading(false);
-  }, [category, status, minScore, opportunityType, commercialValue, sort]);
+  }, [category, status, minScore, opportunityType, commercialValue, sort, showCompleted]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   async function updateStatus(id: string, newStatus: string) {
+    // Instantly reflect the change — no waiting on the refetch. If it's
+    // now applied/rejected and we're not showing completed ones, drop it
+    // from view right away instead of leaving it cluttering the list.
+    setListings((prev) =>
+      !showCompleted && (newStatus === "applied" || newStatus === "rejected")
+        ? prev.filter((l) => l.id !== id)
+        : prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l))
+    );
     await fetch(`/api/listings/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -351,6 +363,18 @@ export default function Dashboard() {
             </select>
             <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
           </div>
+
+          <button
+            onClick={() => setShowCompleted((v) => !v)}
+            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition border ${
+              showCompleted
+                ? "bg-primary/15 border-primary/30 text-primary"
+                : "bg-elevated border-border text-muted hover:border-primary/40"
+            }`}
+          >
+            {showCompleted ? <Eye size={14} /> : <EyeOff size={14} />}
+            <span className="hidden sm:inline">Completed</span>
+          </button>
         </div>
 
         {/* Listings */}
