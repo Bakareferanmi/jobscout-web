@@ -1,4 +1,4 @@
-import { CATEGORIES } from "./config";
+import { CATEGORIES, CLIENT_INTENT_TERMS } from "./config";
 
 export function matchesCategory(title: string, categoryKey: string): boolean {
   const cfg = CATEGORIES[categoryKey];
@@ -6,6 +6,14 @@ export function matchesCategory(title: string, categoryKey: string): boolean {
   if (cfg.exclude.some((bad) => t.includes(bad))) return false;
   if (cfg.mustIncludeAny.length && !cfg.mustIncludeAny.some((kw) => t.includes(kw))) return false;
   return true;
+}
+
+// Used instead of matchesCategory for Reddit-sourced client-kind listings —
+// a "for hire" post says "I need a website", not "frontend" or "react", so
+// the job-title keyword filter above would silently drop almost all of them.
+export function matchesClientIntent(title: string): boolean {
+  const t = title.toLowerCase();
+  return CLIENT_INTENT_TERMS.some((kw) => t.includes(kw));
 }
 
 function parsePosted(posted: string | undefined | null): Date | null {

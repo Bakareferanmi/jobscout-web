@@ -75,8 +75,25 @@ export const REDDIT_SUBS: Record<string, string[]> = {
   "digital-marketing": ["forhire", "socialmediajobs"],
   electrical: ["forhire"],
   "it-support": ["forhire", "jobbit"],
-  web3: ["web3", "ethdev", "CryptoCurrency"],
+  web3: ["web3", "ethdev", "CryptoCurrency", "forhire"],
 };
+
+// Broad terms for spotting "someone wants a site/app built" posts on r/forhire
+// etc. Deliberately NOT the same as a category's mustIncludeAny — a client
+// post rarely says "frontend" or "react", it says "website" or "wordpress".
+// Reddit-sourced client-kind listings are matched against this instead of
+// the job-title category filter, so they don't get silently dropped.
+export const CLIENT_INTENT_TERMS: string[] = [
+  "website", "web site", "landing page", "web app", "web application",
+  "web design", "wordpress", "shopify", "webflow", "squarespace",
+  "need a developer", "need a web developer", "need someone to build",
+  "developer needed", "website needed", "build me a website",
+  "build a website", "build a web app", "build an app",
+  "looking for a developer", "looking for a web developer",
+  "hire a developer", "freelance developer", "small business website",
+  "portfolio website", "e-commerce site", "ecommerce site",
+  "mobile app developer", "app developer needed",
+];
 
 // Corrected URL — WeWorkRemotely renamed this category from
 // "remote-marketing-jobs" to "remote-sales-and-marketing-jobs".

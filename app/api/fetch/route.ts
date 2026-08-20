@@ -1,7 +1,7 @@
 import { pool, ensureSchema } from "@/lib/db";
 import { CATEGORIES, REDDIT_SUBS, WWR_FEEDS } from "@/lib/config";
 import { fetchRemotive, fetchRemoteok, fetchArbeitnow, fetchJobicy, fetchWwrRss, fetchReddit, fetchHimalayas, RawListing } from "@/lib/sources";
-import { matchesCategory, scoreListing } from "@/lib/scoring";
+import { matchesCategory, matchesClientIntent, scoreListing } from "@/lib/scoring";
 import { classifyOpportunity, calculateMatch } from "@/lib/opportunities";
 import { analyzeLead } from "@/lib/leads";
 import { getProfile } from "@/lib/profile";
@@ -24,7 +24,14 @@ async function saveListings(raw: RawListing[], category: string): Promise<number
   let newCount = 0;
   for (const item of raw) {
     if (!item.title || !item.url) continue;
-    if (!matchesCategory(item.title, category)) continue;
+
+    // Client-kind items (currently Reddit's r/forhire etc.) describe what
+    // someone wants built, not a job title — match them against broad
+    // client-intent terms instead of the category's job-title keywords.
+    const isMatch = item.kind === "client"
+      ? matchesClientIntent(item.title)
+      : matchesCategory(item.title, category);
+    if (!isMatch) continue;
 
     const id = makeId(item.source, item.url);
     const fingerprint = makeFingerprint(item.title, item.company);
