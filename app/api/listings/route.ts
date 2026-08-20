@@ -9,6 +9,15 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "25", 10);
 
   const { conditions, params } = buildListingFilters(searchParams);
+
+  // By default, hide applied/rejected listings so the screen stays focused
+  // on what's still actionable. Only applies when no explicit status filter
+  // is set, and can be turned off with showDone=1 (the frontend's "Show
+  // completed" toggle).
+  if (!searchParams.get("status") && searchParams.get("showDone") !== "1") {
+    conditions.push(`status NOT IN ('applied', 'rejected')`);
+  }
+
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
   const orderBy = buildOrderClause(searchParams.get("sort"));
 
