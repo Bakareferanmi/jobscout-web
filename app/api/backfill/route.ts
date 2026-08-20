@@ -2,13 +2,23 @@ import { pool, ensureSchema } from "@/lib/db";
 import { classifyOpportunity, calculateMatch } from "@/lib/opportunities";
 import { analyzeLead } from "@/lib/leads";
 import { getProfile } from "@/lib/profile";
+import { NextRequest } from "next/server";
 
-export async function GET() {
+// GET /api/backfill            -> only classifies rows that have never been
+//                                  classified (opportunity_type IS NULL)
+// GET /api/backfill?all=1      -> re-classifies every row, mirroring the
+//                                  CLI's `reanalyze` — use after changing
+//                                  lib/profile.ts so old listings pick up
+//                                  the new skills/roles too
+export async function GET(request: NextRequest) {
   await ensureSchema();
   const profile = getProfile();
+  const all = new URL(request.url).searchParams.get("all") === "1";
 
   const { rows } = await pool.query(
-    "SELECT id, title, company, category, kind FROM listings WHERE opportunity_type IS NULL"
+    all
+      ? "SELECT id, title, company, category, kind FROM listings"
+      : "SELECT id, title, company, category, kind FROM listings WHERE opportunity_type IS NULL"
   );
 
   let updated = 0;
@@ -31,5 +41,5 @@ export async function GET() {
     updated++;
   }
 
-  return Response.json({ updated, remaining: 0 });
+  return Response.json({ mode: all ? "all" : "new-only", updated });
 }

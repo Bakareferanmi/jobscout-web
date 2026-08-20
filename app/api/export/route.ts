@@ -1,39 +1,23 @@
 import { pool } from "@/lib/db";
+import { buildListingFilters, buildOrderClause } from "@/lib/query";
 import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const category = searchParams.get("category");
-  const status = searchParams.get("status");
-  const kind = searchParams.get("kind");
-  const minScore = searchParams.get("minScore");
 
-  const conditions: string[] = [];
-  const params: (string | number)[] = [];
-
-  if (category) {
-    params.push(category);
-    conditions.push(`category = $${params.length}`);
-  }
-  if (status) {
-    params.push(status);
-    conditions.push(`status = $${params.length}`);
-  }
-  if (kind) {
-    params.push(kind);
-    conditions.push(`kind = $${params.length}`);
-  }
-  if (minScore) {
-    params.push(parseInt(minScore, 10));
-    conditions.push(`score >= $${params.length}`);
-  }
-
+  const { conditions, params } = buildListingFilters(searchParams);
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-  const query = `SELECT * FROM listings ${where} ORDER BY score DESC, fetched_at DESC`;
+  const orderBy = buildOrderClause(searchParams.get("sort"));
 
+  const query = `SELECT * FROM listings ${where} ${orderBy}`;
   const { rows } = await pool.query(query, params);
 
-  const headers = ["id", "kind", "category", "title", "company", "location", "url", "source", "posted", "score", "status", "fetched_at"];
+  const headers = [
+    "id", "kind", "category", "title", "company", "location",
+    "url", "source", "posted", "score", "status", "fetched_at",
+    "opportunity_type", "match_score", "matched_skills",
+    "lead_type", "intent", "commercial_value", "recommended_action",
+  ];
   const escape = (val: unknown) => {
     const s = String(val ?? "");
     return s.includes(",") || s.includes('"') || s.includes("\n")

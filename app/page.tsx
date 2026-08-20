@@ -19,6 +19,7 @@ import {
   Copy,
   Check,
   Loader2,
+  UserRound,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -68,6 +69,9 @@ export default function Dashboard() {
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
   const [minScore, setMinScore] = useState("");
+  const [opportunityType, setOpportunityType] = useState("");
+  const [commercialValue, setCommercialValue] = useState("");
+  const [sort, setSort] = useState("score");
   const [loading, setLoading] = useState(true);
   const [fetching, setFetching] = useState(false);
   const [fetchResult, setFetchResult] = useState<string | null>(null);
@@ -94,6 +98,9 @@ export default function Dashboard() {
     if (category) params.set("category", category);
     if (status) params.set("status", status);
     if (minScore) params.set("minScore", minScore);
+    if (opportunityType) params.set("opportunityType", opportunityType);
+    if (commercialValue) params.set("commercialValue", commercialValue);
+    if (sort !== "score") params.set("sort", sort);
     params.set("limit", "50");
 
     const [listingsRes, statsRes] = await Promise.all([
@@ -103,7 +110,7 @@ export default function Dashboard() {
     setListings(listingsRes);
     setStats(statsRes);
     setLoading(false);
-  }, [category, status, minScore]);
+  }, [category, status, minScore, opportunityType, commercialValue, sort]);
 
   useEffect(() => {
     load();
@@ -169,6 +176,9 @@ export default function Dashboard() {
     ...(category ? { category } : {}),
     ...(status ? { status } : {}),
     ...(minScore ? { minScore } : {}),
+    ...(opportunityType ? { opportunityType } : {}),
+    ...(commercialValue ? { commercialValue } : {}),
+    ...(sort !== "score" ? { sort } : {}),
   });
 
   const selectClass =
@@ -229,6 +239,10 @@ export default function Dashboard() {
           <Link href="/leads" className="px-3 py-1.5 rounded-lg text-muted hover:bg-elevated transition flex items-center gap-1.5">
             <Rocket size={12} />
             Leads
+          </Link>
+          <Link href="/profile" className="px-3 py-1.5 rounded-lg text-muted hover:bg-elevated transition flex items-center gap-1.5">
+            <UserRound size={12} />
+            Profile
           </Link>
         </div>
       </div>
@@ -303,6 +317,40 @@ export default function Dashboard() {
             <Download size={14} />
             Export
           </a>
+        </div>
+
+        {/* Lead-scoring filters */}
+        <div className="flex items-center gap-2 flex-wrap -mt-3">
+          <div className="relative">
+            <select value={opportunityType} onChange={(e) => setOpportunityType(e.target.value)} className={selectClass}>
+              <option value="">All types</option>
+              <option value="JOB">Job</option>
+              <option value="CLIENT">Client</option>
+              <option value="STARTUP">Startup</option>
+              <option value="FREELANCE">Freelance</option>
+              <option value="WEB3">Web3</option>
+            </select>
+            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+          </div>
+
+          <div className="relative">
+            <select value={commercialValue} onChange={(e) => setCommercialValue(e.target.value)} className={selectClass}>
+              <option value="">Any value</option>
+              <option value="HIGH">High value</option>
+              <option value="MEDIUM">Medium value</option>
+              <option value="LOW">Low value</option>
+            </select>
+            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+          </div>
+
+          <div className="relative">
+            <select value={sort} onChange={(e) => setSort(e.target.value)} className={selectClass}>
+              <option value="score">Sort: score</option>
+              <option value="match">Sort: match %</option>
+              <option value="value">Sort: lead value</option>
+            </select>
+            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+          </div>
         </div>
 
         {/* Listings */}
