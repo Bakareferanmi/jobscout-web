@@ -129,11 +129,14 @@ export default function Dashboard() {
         ? prev.filter((l) => l.id !== id)
         : prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l))
     );
-    await fetch(`/api/listings/${id}`, {
+    const res = await fetch(`/api/listings/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     });
+    if (!res.ok) {
+      setFetchResult("Status update failed — reloading to show the real state");
+    }
     load();
   }
 

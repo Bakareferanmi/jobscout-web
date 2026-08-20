@@ -2,6 +2,9 @@ import { pool, ensureSchema } from "@/lib/db";
 import { buildListingFilters, buildOrderClause } from "@/lib/query";
 import { NextRequest } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(request: NextRequest) {
   await ensureSchema();
 
@@ -26,7 +29,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const { rows } = await pool.query(query, params);
-    return Response.json(rows);
+    return Response.json(rows, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     console.error(err);
     return Response.json({ error: "Query failed" }, { status: 500 });
